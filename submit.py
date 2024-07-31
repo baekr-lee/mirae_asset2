@@ -47,21 +47,12 @@ def parse_code(response_text):
     return None
 
 def save_code_to_file(code, filename="backtest.py"):
-    with open(filename, "w", encoding="utf-8") as file:  # 파일을 UTF-8 인코딩으로 저장
+    with open(filename, "w") as file:
         file.write(code)
 
 def execute_code(filename="backtest.py"):
-    # Debugging print statements
-    print(f"Executing code in file: {filename}")
-    try:
-        result = subprocess.run(['python', filename], capture_output=True, text=True)
-        # Print the results for debugging purposes
-        print(f"stdout: {result.stdout}")
-        print(f"stderr: {result.stderr}")
-        return result.stdout, result.stderr
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return "", str(e)
+    result = subprocess.run(['python', filename], capture_output=True, text=True)
+    return result.stdout
 
 def main():
     st.title("Investment Strategy Backtesting Chatbot")
@@ -76,14 +67,13 @@ def main():
     if 'messages' not in st.session_state:
         st.session_state['messages'] = []
 
-    ticker = st.text_input("Enter the ticker (e.g., 005930.KS, AAPL): ", key="ticker")
-    start_date = st.text_input("Enter the start date (YYYY-MM-DD): ", key="start_date")
-    end_date = st.text_input("Enter the end date (YYYY-MM-DD): ", key="end_date")
+    ticker = st.text_input("Enter the ticker: ", key="ticker")
+    period = st.text_input("Enter the investment period (e.g., '1y', '5y'): ", key="period")
     strategy = st.text_input("Describe your investment strategy: ", key="strategy")
 
     if st.button("Submit"):
-        if ticker and start_date and end_date and strategy:
-            user_input = f"Ticker: {ticker}, Start Date: {start_date}, End Date: {end_date}, Strategy: {strategy}"
+        if ticker and period and strategy:
+            user_input = f"Ticker: {ticker}, Period: {period}, Strategy: {strategy}"
             st.session_state.messages.append({"role": "user", "content": user_input})
 
             request_data_for_code = {
@@ -103,28 +93,23 @@ def main():
 
             if generated_code:
                 save_code_to_file(generated_code)
-                execution_result, execution_error = execute_code()
-                
-                if execution_error:
-                    st.session_state.messages.append({"role": "assistant", "content": f"Execution error:\n{execution_error}"})
-                else:
-                    st.session_state.messages.append({"role": "assistant", "content": f"Generated code:\n```python\n{generated_code}\n```"})
-                    st.session_state.messages.append({"role": "assistant", "content": f"Execution result:\n{execution_result}"})
+                execution_result = execute_code()
+                st.session_state.messages.append({"role": "assistant", "content": f"Execution result:\n{execution_result}"})
 
-                    request_data_for_interpretation = {
-                        'messages': st.session_state.messages + [{"role": "assistant", "content": f"다음 실행결과를 기반으로 해석해줘:\n{execution_result}"}],
-                        'topP': 0.8,
-                        'topK': 0,
-                        'maxTokens': 1024,
-                        'temperature': 0.5,
-                        'repeatPenalty': 5.0,
-                        'stopBefore': [],
-                        'includeAiFilters': True,
-                        'seed': 0
-                    }
+                request_data_for_interpretation = {
+                    'messages': st.session_state.messages + [{"role": "assistant", "content": f"다음 실행결과를 기반으로 해석해줘:\n{execution_result}"}],
+                    'topP': 0.8,
+                    'topK': 0,
+                    'maxTokens': 1024,
+                    'temperature': 0.5,
+                    'repeatPenalty': 5.0,
+                    'stopBefore': [],
+                    'includeAiFilters': True,
+                    'seed': 0
+                }
 
-                    feedback = completion_executor.execute(request_data_for_interpretation)
-                    st.session_state.messages.append({"role": "assistant", "content": feedback})
+                feedback = completion_executor.execute(request_data_for_interpretation)
+                st.session_state.messages.append({"role": "assistant", "content": feedback})
             else:
                 st.session_state.messages.append({"role": "assistant", "content": "Failed to generate code."})
             st.rerun()
