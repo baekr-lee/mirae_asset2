@@ -77,7 +77,7 @@ def main():
             st.session_state.messages.append({"role": "user", "content": user_input})
 
             request_data_for_code = {
-                'messages': st.session_state.messages + [{"role": "assistant", "content": "Write a code that performs backtesting for a given ticker and period using yfinance. The backtesting results should include calculations for cumulative log returns, MDD (Maximum Drawdown), and Sharpe Ratio."}],
+                'messages': st.session_state.messages + 'messages': st.session_state.messages + [{"role": "assistant", "content": "주어진 티커, 시작 날짜, 종료 날짜를 사용하여 yfinance를 이용한 백테스팅을 수행하는 코드를 작성하세요. 백테스팅 결과에는 누적 로그 수익률, 최대 낙폭(MDD), 샤프 비율 계산이 포함되어야 합니다."}],
                 'topP': 0.8,
                 'topK': 0,
                 'maxTokens': 1024,
@@ -97,7 +97,7 @@ def main():
                 st.session_state.messages.append({"role": "assistant", "content": f"Execution result:\n{execution_result}"})
 
                 request_data_for_interpretation = {
-                    'messages': st.session_state.messages + [{"role": "assistant", "content": f"Please interpret the following execution result:\n{execution_result}"}],
+                    'messages': st.session_state.messages + [{"role": "assistant", "content": f"다음 실행결과를 기반으로 해석해줘:\n{execution_result}"}],,
                     'topP': 0.8,
                     'topK': 0,
                     'maxTokens': 1024,
@@ -112,7 +112,7 @@ def main():
                 st.session_state.messages.append({"role": "assistant", "content": feedback})
             else:
                 st.session_state.messages.append({"role": "assistant", "content": "Failed to generate code."})
-            st.experimental_rerun()
+            st.rerun()
 
     for i, message_dict in enumerate(st.session_state['messages']):
         if message_dict["role"] == "user":
