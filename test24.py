@@ -127,7 +127,7 @@ def main():
                     st.session_state.messages.append({"role": "assistant", "content": feedback})
             else:
                 st.session_state.messages.append({"role": "assistant", "content": "Failed to generate code."})
-            st.experimental_rerun()
+            st.rerun()
 
     for i, message_dict in enumerate(st.session_state['messages']):
         if message_dict["role"] == "user":
